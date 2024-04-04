@@ -5,5 +5,5 @@ const connectDB = require("./db/connection")
 
 app.listen(3000 , async() =>{
     console.log(`running on port ${serverPort}`);
-    //await connectDB();
+    await connectDB();
 })

@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-var createError = require('http-errors')
+var createError = require('http-errors');
+const Seedrouter = require("./routes/seedRouter");
+const userRoute = require("./routes/userRoute");
 
 
 const app  = express();
@@ -15,6 +17,8 @@ res.status(200).json({
     message: "Api"
 })
 })
+app.use("/user/api",userRoute); 
+app.use("/seed/api" , Seedrouter)
 
 //client side error handling
 app.use((req,res,next) => {
