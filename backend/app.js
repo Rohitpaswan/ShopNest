@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 var createError = require('http-errors');
 const Seedrouter = require("./routes/seedRouter");
 const userRoute = require("./routes/userRoute");
+const {errorResponse} = require("./controllers/responseController");
 
 
 const app  = express();
@@ -29,9 +30,10 @@ app.use((req,res,next) => {
 
 //server side error handling
 app.use((err, req,res,next) => {
-   return res.status(err.status || 500).json({ 
-    sucess : "false",
-    message : err.message})
+    return errorResponse(res, {
+      statusCode : err.status,
+      message : err.message
+    })
 
 });
 module.exports = app;

@@ -1,6 +1,6 @@
 const express = require("express");
 const seedUser = require("../controllers/seedController");
 const seedRouter = express.Router();
-seedRouter.get("/" ,seedUser);
+seedRouter.post("/" ,seedUser);
 
 module.exports =seedRouter
