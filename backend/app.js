@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 var createError = require('http-errors');
 const Seedrouter = require("./routes/seedRouter");
 const userRoute = require("./routes/userRoute");
+const categoryRoute = require("./routes/categoryRoute");
 const {errorResponse} = require("./controllers/responseController");
 
 
@@ -18,9 +19,9 @@ res.status(200).json({
     message: "Api"
 })
 })
-app.use("/user/api",userRoute); 
+app.use("/api/user",userRoute); 
 app.use("/seed/api" , Seedrouter)
-
+app.use("/api/v1/category", categoryRoute);
 //client side error handling
 app.use((req,res,next) => {
   next( createError(404,  "Route Error"));
@@ -30,6 +31,7 @@ app.use((req,res,next) => {
 
 //server side error handling
 app.use((err, req,res,next) => {
+  console.log('srevr erroe', err.message);
     return errorResponse(res, {
       statusCode : err.status,
       message : err.message

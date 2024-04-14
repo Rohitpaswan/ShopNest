@@ -14,7 +14,6 @@ const successResponse = (res , {statusCode =200 , message = "Success" } , payloa
         success: true,
         message: message,
         payload : payload
-
-    })
+})
 }
 module.exports = {errorResponse , successResponse }; 

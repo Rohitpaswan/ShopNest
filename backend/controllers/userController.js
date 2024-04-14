@@ -1,14 +1,15 @@
 const createHttpError = require("http-errors");
 const userModel = require("../models/user.model");
-const { successResponse } = require("./responseController");
+const { successResponse, errorResponse } = require("./responseController");
+const { default: mongoose } = require("mongoose");
 
 const getUsers = async (req, res) => {
   try {
     //search
     const search = req.query.search || "";
-    const searchRegx = new RegExp(".*" + search + ".*", "i"); //searching attribute in db
+    const searchRegx = new RegExp(search, "i"); //searching attribute in db
     const filter = {
-      isAdmin: { $ne: true }, //return only non-admin users
+      // isAdmin: { $ne: true }, //return only non-admin users
       $or: [
         { name: { $regex: searchRegx } },
         { email: { $regex: searchRegx } },
@@ -20,10 +21,9 @@ const getUsers = async (req, res) => {
     const pages = req.query.pages * 1 || 1;
     const limit = req.query.limit * 1 || 5;
     const skip = (pages - 1) * limit;
-    console.log(limit, skip);
+
     const count = await userModel.find(filter).countDocuments();
     const users = await userModel.find(filter).skip(skip).limit(limit);
-    
 
     const pagiantion = {
       totalPages: Math.ceil(count / limit),
@@ -31,8 +31,10 @@ const getUsers = async (req, res) => {
       perviousPage: pages - 1 > 0 ? pages - 1 : null,
       nextPage: pages + 1 <= Math.ceil(count / limit) ? pages + 1 : null,
     };
-    if(!users) throw createError(404 , "No users found");
-    //**calling function  */
+    if (!users) {
+      errorResponse(res, { statusCode: 404, message: "User Not Found" });
+    }
+
     successResponse(
       res,
       { statusCode: 200, message: "Users return sucuffuly" },
@@ -40,14 +42,33 @@ const getUsers = async (req, res) => {
     );
   } catch (e) {
     console.log(e);
-
   }
 };
 
-const getUser = (req, res) => {
+//find users by id
+const getUser = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const options = { password: 0 };
+    const user = await userModel.findById(userId, options);
+    if (!user) errorResponse(res, { statusCode: 404, message: "user not found" });
+    successResponse(
+      res,
+      {
+        statusCode: 200,
+        message: "User returned successfully",
+      },
+      user
+    );
+  } 
+  catch (error) {
+    if (error instanceof mongoose.Error) {
+      res.status(400).json({
+        message: "Invalid userId",
+      });
+    }
+    console.log("error", error.message);
+  }
 };
 
-
-
-
-module.exports ={ getUsers ,getUser};
+module.exports = { getUsers, getUser };
