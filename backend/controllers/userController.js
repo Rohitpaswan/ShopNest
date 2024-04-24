@@ -3,7 +3,9 @@ const userModel = require("../models/user.model");
 const { successResponse, errorResponse } = require("./responseController");
 const { default: mongoose } = require("mongoose");
 const generateToken = require("../helper/generateToken");
-const { secretKey } = require("../secret");
+const { secretKey, client_url, smptUsername } = require("../secret");
+const sendEmailWithNodemailer = require("../helper/email");
+const jwt = require("jsonwebtoken");
 
 const getUsers = async (req, res) => {
   try {
@@ -96,26 +98,86 @@ const deleteUser = async (req, res) => {
   }
 };
 
-//User registation 
+//User registation
 const processRegister = async (req, res) => {
-  const { email, password, name, phone, address } = req.body;
-  const newUser = { email, password, name, phone, address }; 
-  const userExists = await userModel.exists({ email: email }); //checking if user exists
+  const { email, password, name, phoneNumber, address } = req.body;
+  const newUser = { email, password, name, phoneNumber, address };
 
-  if (userExists) {
+  try {
+    const userExists = await userModel.exists({ email }); // Simplified, as key and value are the same
+
+    if (userExists) {
+      return errorResponse(res, {
+        statusCode: 409,
+        message: "User already exists",
+      });
+    } else {
+      const token = generateToken(newUser, secretKey, "10m");
+      console.log("server", token);
+
+      // Prepare email
+      const emailData = {
+        from: "ShopNest  <shopnext727@gmail.com>", // Fixed typo
+        to: email,
+        subject: "Please Verify your email address", // Corrected typo
+        html:
+          `<h2>Hello ${name}!</h2>` +
+          `<p>Click on the link for activation: <a href="${client_url}/api/user/activation/${token}">Activation Link</a>.</p>`,
+      };
+
+      try {
+        const info = await sendEmailWithNodemailer(emailData); // Wait for the email sending to finish
+        return successResponse(
+          res,
+          { statusCode: 200, message: "User Registration Success" },
+          { token: token }
+        );
+      } catch (error) {
+        return errorResponse({ message: error.message });
+      }
+    }
+  } catch (error) {
+    // Handle any unexpected errors
+    console.error("Error during registration:", error);
     return errorResponse(res, {
-      statusCode: 409,
-      message: "User already exists",
+      statusCode: 500,
+      message: "Internal Server Error",
     });
-  } else {
-    console.log(typeof(secretKey))
-    const token = generateToken(newUser, secretKey, "10m");
-    return successResponse(
-      res,
-      { statusCode: 200, message: "User Registration Success" },
-      { token: token }
-    );
   }
 };
 
-module.exports = { getUser, getUsers, deleteUser, processRegister };
+//user-Verification
+
+const activeUserAccount = async (req, res, next) => {
+  const { token } = req.body;
+  if (!token)
+    return errorResponse({ statusCode: 404, message: "token not found" });
+  console.log("clinent", token);
+
+  try {
+    //get token from body
+
+    //varify token
+    const decode = jwt.verify(token, secretKey);
+    console.log(decode);
+    if (!decode) {
+      return res.status(404).send({ message: "User couldn't be verified" });
+    }
+    //store data in db
+    const data = await userModel.create(decode);
+    console.log(data);
+    console.log(decode);
+    return res.status(200).send({ message: "success" });
+  } catch (error) {
+    console.error("Activation Failed", error.name);
+    return res.status(500).send({ error });
+  }
+};
+
+module.exports = {
+  getUser,
+  getUsers,
+  deleteUser,
+  processRegister,
+  activeUserAccount,
+};

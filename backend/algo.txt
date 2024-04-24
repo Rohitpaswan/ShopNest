@@ -1,0 +1,5 @@
+1.tokens genration
+2. emil setup 
+3.
+
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJvaGl0cGFzd2FuMjQ0NEBnbWFpbC5jb20iLCJwYXNzd29yZCI6IlJvaGl0QDIwMDE0NSIsInBob25lIjoiODI4NDU0NjcxIiwiaWF0IjoxNzEzNzA1NjMwLCJleHAiOjE3MTM3MDYyMzB9.p4V9A-gbgqwwXpSvMlu_SeKDf7FroLxeSv95cKXdy6Q"
